@@ -21,11 +21,11 @@ app.post('/whatsapp-webhook', (req, res) => {
   // Handle the response based on the user's choice
   if (incomingMessage.trim().toLowerCase() === 'present') {
       twiml.message('You have confirmed your action!');
-      sendMediaMessage(to);
+      sendMediaMessage(from);
   } else if (incomingMessage.trim().toLowerCase() === 'absent') {
       twiml.message('You have canceled your action!');
   } else if (incomingMessage.trim().toLowerCase().includes('hii')) {
-      createMessage(to);
+      createMessage(from);
   } else {
       twiml.message('Sorry, I didn’t understand that.');
   }
