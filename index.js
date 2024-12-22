@@ -40,7 +40,7 @@ function sendMediaMessage(to) {
   client.messages
       .create({
           from: `whatsapp:${FROM}`,  // Your Twilio WhatsApp number
-          to: `whatsapp:${to}`, // Recipient's WhatsApp number
+          to: to, // Recipient's WhatsApp number
           contentSid: "HX92b607e6ee28bdffc6643ec2261ce4d7"
       })
       .then(message => console.log(`Media message sent with SID: ${message.sid}`))
@@ -52,7 +52,7 @@ function createMessage(to) {
     client.messages
         .create({
             from: `whatsapp:${FROM}`, // Twilio Sandbox number or your approved number
-            to: `whatsapp:${to}`,  // Recipient's number
+            to: to,  // Recipient's number
             contentSid: 'HX6f27c257f671b88acd7f650ed7011627'
         })
         .then(message => console.log(`Message sent with SID: ${message.sid}`))
