@@ -1,84 +1,74 @@
-const express = require("express")
-const axios = require("axios")
+const express = require('express');
+const bodyParser = require('body-parser');
+const { MessagingResponse } = require('twilio').twiml;
 const dotenv = require("dotenv")
 dotenv.config();
 
 const app = express();
-app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+const { AUTH_TOKEN, ACCOUNT_SID, FROM } = process.env;
+const client = require('twilio')(ACCOUNT_SID, AUTH_TOKEN);
 
-const { WEBHOOK_VERIFY_TOKEN, GRAPH_API_TOKEN, PORT } = process.env;
+// Webhook to receive incoming messages
+app.post('/whatsapp-webhook', (req, res) => {
+  const incomingMessage = req.body.Body; // Get the body of the incoming message (Confirm or Cancel)
+  const from = req.body.From; // Get the sender's number
 
-app.post("/webhook", async (req, res) => {
-  // log incoming messages
-  console.log("Incoming webhook message:", JSON.stringify(req.body, null, 2));
+  console.log(`Incoming response: "${incomingMessage}" from ${from}`);
 
-  // check if the webhook request contains a message
-  // details on WhatsApp text message payload: https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks/payload-examples#text-messages
-  const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
+  const twiml = new MessagingResponse();
 
-  // check if the incoming message contains text
-  if (message?.type === "text") {
-    // extract the business number to send the reply from it
-    const business_phone_number_id =
-      req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
+  // Handle the response based on the user's choice
+  if (incomingMessage.toLowerCase() === 'present') {
+      twiml.message('You have confirmed your action!');
 
-    // send a reply message as per the docs here https://developers.facebook.com/docs/whatsapp/cloud-api/reference/messages
-    await axios({
-      method: "POST",
-      url: `https://graph.facebook.com/v18.0/${business_phone_number_id}/messages`,
-      headers: {
-        Authorization: `Bearer ${GRAPH_API_TOKEN}`,
-      },
-      data: {
-        messaging_product: "whatsapp",
-        to: message.from,
-        text: { body: "Echo: " + message.text.body },
-        context: {
-          message_id: message.id, // shows the message as a reply to the original user message
-        },
-      },
-    });
-
-    // mark incoming message as read
-    await axios({
-      method: "POST",
-      url: `https://graph.facebook.com/v18.0/${business_phone_number_id}/messages`,
-      headers: {
-        Authorization: `Bearer ${GRAPH_API_TOKEN}`,
-      },
-      data: {
-        messaging_product: "whatsapp",
-        status: "read",
-        message_id: message.id,
-      },
-    });
-  }
-
-  res.sendStatus(200);
-});
-
-// accepts GET requests at the /webhook endpoint. You need this URL to setup webhook initially.
-// info on verification request payload: https://developers.facebook.com/docs/graph-api/webhooks/getting-started#verification-requests
-app.get("/webhook", (req, res) => {
-  const mode = req.query["hub.mode"];
-  const token = req.query["hub.verify_token"];
-  const challenge = req.query["hub.challenge"];
-
-  // check the mode and token sent are correct
-  if (mode === "subscribe" && token === WEBHOOK_VERIFY_TOKEN) {
-    // respond with 200 OK and challenge token from the request
-    res.status(200).send(challenge);
-    console.log("Webhook verified successfully!");
+      // Send another message with contentSid (media)
+      sendMediaMessage(from);
+  } else if (incomingMessage.toLowerCase() === 'absent') {
+      twiml.message('You have canceled your action!');
   } else {
-    // respond with '403 Forbidden' if verify tokens do not match
-    res.sendStatus(403);
+      twiml.message('Sorry, I didn’t understand that.');
   }
+
+  // Send the response back to the user
+  res.writeHead(200, { 'Content-Type': 'text/xml' });
+  res.end(twiml.toString());
 });
 
-app.get("/", (req, res) => {
-  res.send(`<html><body><pre>Nothing to see here. Checkout README.md to start.</pre></body></html>`);
-});
+// Function to send media (using contentSid)
+function sendMediaMessage(to) {
+  client.messages
+      .create({
+          from: `whatsapp:${FROM}`,  // Your Twilio WhatsApp number
+          to: to, // Recipient's WhatsApp number
+          contentSid: "HX92b607e6ee28bdffc6643ec2261ce4d7"
+      })
+      .then(message => console.log(`Media message sent with SID: ${message.sid}`))
+      .catch(error => console.error('Error sending media message:', error));
+}
 
+
+
+// Function to send an automated message (this is similar to your original code)
+function createMessage() {
+    client.messages
+        .create({
+            from: `whatsapp:${FROM}`, // Twilio Sandbox number or your approved number
+            to: 'whatsapp:+918390854549',  // Recipient's number
+            contentSid: 'HX92b607e6ee28bdffc6643ec2261ce4d7'
+            // 'HX6f27c257f671b88acd7f650ed7011627'
+        })
+        .then(message => console.log(`Message sent with SID: ${message.sid}`))
+        .catch(error => console.error('Error sending message:', error));
+}
+
+// Test: Send a message after 1 second
+setTimeout(() => {
+    createMessage();
+}, 1000);
+
+// Start the server to listen for incoming webhooks
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server is listening on port: ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
