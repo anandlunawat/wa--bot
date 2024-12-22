@@ -55,7 +55,7 @@ function createMessage() {
         .create({
             from: `whatsapp:${FROM}`, // Twilio Sandbox number or your approved number
             to: 'whatsapp:+918390854549',  // Recipient's number
-            contentSid: 'HX92b607e6ee28bdffc6643ec2261ce4d7'
+            contentSid: 'HX6f27c257f671b88acd7f650ed7011627'
             // 'HX6f27c257f671b88acd7f650ed7011627'
         })
         .then(message => console.log(`Message sent with SID: ${message.sid}`))
