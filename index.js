@@ -21,11 +21,11 @@ app.post('/whatsapp-webhook', (req, res) => {
   // Handle the response based on the user's choice
   if (incomingMessage.trim().toLowerCase() === 'present') {
       twiml.message('You have confirmed your action!');
-      sendMediaMessage();
+      sendMediaMessage(to);
   } else if (incomingMessage.trim().toLowerCase() === 'absent') {
       twiml.message('You have canceled your action!');
   } else if (incomingMessage.trim().toLowerCase().includes('hii')) {
-      createMessage();
+      createMessage(to);
   } else {
       twiml.message('Sorry, I didn’t understand that.');
   }
@@ -36,11 +36,11 @@ app.post('/whatsapp-webhook', (req, res) => {
 });
 
 // Function to send media (using contentSid)
-function sendMediaMessage() {
+function sendMediaMessage(to) {
   client.messages
       .create({
           from: `whatsapp:${FROM}`,  // Your Twilio WhatsApp number
-          to: 'whatsapp:+918390854549', // Recipient's WhatsApp number
+          to: `whatsapp:${to}`, // Recipient's WhatsApp number
           contentSid: "HX92b607e6ee28bdffc6643ec2261ce4d7"
       })
       .then(message => console.log(`Media message sent with SID: ${message.sid}`))
@@ -48,11 +48,11 @@ function sendMediaMessage() {
 }
 
 // Function to send an automated message (this is similar to your original code)
-function createMessage() {
+function createMessage(to) {
     client.messages
         .create({
             from: `whatsapp:${FROM}`, // Twilio Sandbox number or your approved number
-            to: 'whatsapp:+918390854549',  // Recipient's number
+            to: `whatsapp:${to}`,  // Recipient's number
             contentSid: 'HX6f27c257f671b88acd7f650ed7011627'
         })
         .then(message => console.log(`Message sent with SID: ${message.sid}`))
