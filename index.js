@@ -19,13 +19,13 @@ app.post('/whatsapp-webhook', (req, res) => {
   const twiml = new MessagingResponse();
 
   // Handle the response based on the user's choice
-  if (incomingMessage.toLowerCase() === 'present') {
+  if (incomingMessage.trim().toLowerCase() === 'present') {
       twiml.message('You have confirmed your action!');
-
-      // Send another message with contentSid (media)
-      sendMediaMessage(from);
-  } else if (incomingMessage.toLowerCase() === 'absent') {
+      sendMediaMessage();
+  } else if (incomingMessage.trim().toLowerCase() === 'absent') {
       twiml.message('You have canceled your action!');
+  } else if (incomingMessage.trim().toLowerCase().includes('hii')) {
+      createMessage();
   } else {
       twiml.message('Sorry, I didn’t understand that.');
   }
@@ -36,18 +36,16 @@ app.post('/whatsapp-webhook', (req, res) => {
 });
 
 // Function to send media (using contentSid)
-function sendMediaMessage(to) {
+function sendMediaMessage() {
   client.messages
       .create({
           from: `whatsapp:${FROM}`,  // Your Twilio WhatsApp number
-          to: to, // Recipient's WhatsApp number
+          to: 'whatsapp:+918390854549', // Recipient's WhatsApp number
           contentSid: "HX92b607e6ee28bdffc6643ec2261ce4d7"
       })
       .then(message => console.log(`Media message sent with SID: ${message.sid}`))
       .catch(error => console.error('Error sending media message:', error));
 }
-
-
 
 // Function to send an automated message (this is similar to your original code)
 function createMessage() {
@@ -56,19 +54,13 @@ function createMessage() {
             from: `whatsapp:${FROM}`, // Twilio Sandbox number or your approved number
             to: 'whatsapp:+918390854549',  // Recipient's number
             contentSid: 'HX6f27c257f671b88acd7f650ed7011627'
-            // 'HX6f27c257f671b88acd7f650ed7011627'
         })
         .then(message => console.log(`Message sent with SID: ${message.sid}`))
         .catch(error => console.error('Error sending message:', error));
 }
 
-// Test: Send a message after 1 second
-setTimeout(() => {
-    createMessage();
-}, 1000);
-
 // Start the server to listen for incoming webhooks
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
