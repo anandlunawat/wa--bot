@@ -25,6 +25,7 @@ app.post("/whatsapp-webhook", (req, res) => {
     } else if (incomingMessage.trim().toLowerCase() === "absent") {
         twiml.message("You have canceled your action!");
     } else if (incomingMessage.trim().toLowerCase().includes("hii")) {
+        twiml.message("Hello Welcome!!!");
         createMessage(from);
     } else {
         twiml.message("Sorry, I didn’t understand that.");
